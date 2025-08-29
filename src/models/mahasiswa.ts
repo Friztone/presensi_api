@@ -6,11 +6,13 @@ export interface Mahasiswa {
   jurusan: string;
 }
 
+// Ambil semua mahasiswa
 export async function getAllMahasiswa(): Promise<Mahasiswa[]> {
   const [rows] = await db.query("SELECT * FROM mahasiswa");
   return rows as Mahasiswa[];
 }
 
+// Ambil mahasiswa berdasarkan NIM
 export async function getMahasiswaByNIM(
   nim: string
 ): Promise<Mahasiswa | null> {
@@ -19,6 +21,7 @@ export async function getMahasiswaByNIM(
   return data || null;
 }
 
+// Tambah mahasiswa baru
 export async function createMahasiswa(data: Mahasiswa): Promise<void> {
   await db.query(
     "INSERT INTO mahasiswa (nim, nama, jurusan) VALUES (?, ?, ?)",
@@ -26,6 +29,7 @@ export async function createMahasiswa(data: Mahasiswa): Promise<void> {
   );
 }
 
+// Update mahasiswa berdasarkan NIM
 export async function updateMahasiswa(
   nim: string,
   data: Partial<Mahasiswa>
@@ -37,6 +41,7 @@ export async function updateMahasiswa(
   ]);
 }
 
+// Hapus mahasiswa berdasarkan NIM
 export async function deleteMahasiswa(nim: string): Promise<void> {
   await db.query("DELETE FROM mahasiswa WHERE nim = ?", [nim]);
 }

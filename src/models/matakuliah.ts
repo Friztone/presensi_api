@@ -6,11 +6,13 @@ export interface MataKuliah {
   sks: number;
 }
 
+// Ambil semua mata kuliah
 export async function getAllMataKuliah(): Promise<MataKuliah[]> {
   const [rows] = await db.query("SELECT * FROM mata_kuliah");
   return rows as MataKuliah[];
 }
 
+// Ambil mata kuliah berdasarkan kode_mk
 export async function getMataKuliahByKode(
   kode_mk: string
 ): Promise<MataKuliah | null> {
@@ -21,6 +23,7 @@ export async function getMataKuliahByKode(
   return data || null;
 }
 
+// Tambah mata kuliah baru
 export async function createMataKuliah(data: MataKuliah): Promise<void> {
   await db.query(
     "INSERT INTO mata_kuliah (kode_mk, nama_mk, sks) VALUES (?, ?, ?)",
@@ -28,6 +31,7 @@ export async function createMataKuliah(data: MataKuliah): Promise<void> {
   );
 }
 
+// Update mata kuliah berdasarkan kode_mk
 export async function updateMataKuliah(
   kode_mk: string,
   data: Partial<MataKuliah>
@@ -38,6 +42,7 @@ export async function updateMataKuliah(
   );
 }
 
+// Hapus mata kuliah berdasarkan kode_mk
 export async function deleteMataKuliah(kode_mk: string): Promise<void> {
   await db.query("DELETE FROM mata_kuliah WHERE kode_mk = ?", [kode_mk]);
 }

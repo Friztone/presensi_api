@@ -11,7 +11,7 @@ import {
 
 import {
   getAllDosen,
-  getDosenByNIDN,
+  getDosenByNidn,
   createDosen,
   updateDosen,
   deleteDosen,
@@ -127,7 +127,7 @@ export async function router(req: IncomingMessage, res: ServerResponse) {
         }
         const nidn = req.url.split("/")[2];
         if (nidn) {
-          const dosen = await getDosenByNIDN(nidn);
+          const dosen = await getDosenByNidn(nidn);
           res.end(JSON.stringify(dosen || { message: "Not found" }));
           return;
         }
@@ -240,14 +240,14 @@ export async function router(req: IncomingMessage, res: ServerResponse) {
     // === PRESENSI ===
     if (req.url?.startsWith("/presensi")) {
       if (req.method === "GET") {
-        // Mode detail (JOIN)
+
         if (req.url === "/presensi") {
           const data = await getPresensiWithDetails();
           res.end(JSON.stringify(data));
           return;
         }
 
-        // Mode raw (tanpa JOIN)
+
         if (req.url === "/presensi/raw") {
           const data = await getAllPresensi();
           res.end(JSON.stringify(data));
@@ -286,7 +286,7 @@ export async function router(req: IncomingMessage, res: ServerResponse) {
       }
     }
 
-    // Default 404
+
     res.statusCode = 404;
     res.end(JSON.stringify({ message: "Not Found" }));
   } catch (err: any) {
