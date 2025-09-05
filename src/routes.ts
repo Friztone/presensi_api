@@ -240,21 +240,29 @@ export async function router(req: IncomingMessage, res: ServerResponse) {
     // === PRESENSI ===
     if (req.url?.startsWith("/presensi")) {
       if (req.method === "GET") {
+        // Cek apakah ada query ?nim=
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const nim = urlObj.searchParams.get("nim");
 
-        if (req.url === "/presensi") {
+        if (nim) {
+          const data = await getRekapByMahasiswa(nim);
+          res.end(JSON.stringify(data));
+          return;
+        }
+
+        if (urlObj.pathname === "/presensi") {
           const data = await getPresensiWithDetails();
           res.end(JSON.stringify(data));
           return;
         }
 
-
-        if (req.url === "/presensi/raw") {
+        if (urlObj.pathname === "/presensi/raw") {
           const data = await getAllPresensi();
           res.end(JSON.stringify(data));
           return;
         }
 
-        const id = parseInt(req.url.split("/")[2]);
+        const id = parseInt(urlObj.pathname.split("/")[2]);
         if (!isNaN(id)) {
           const presensi = await getPresensiById(id);
           res.end(JSON.stringify(presensi || { message: "Not found" }));
@@ -285,7 +293,6 @@ export async function router(req: IncomingMessage, res: ServerResponse) {
         return;
       }
     }
-
 
     res.statusCode = 404;
     res.end(JSON.stringify({ message: "Not Found" }));

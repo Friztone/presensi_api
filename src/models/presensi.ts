@@ -4,7 +4,7 @@ export interface Presensi {
   id?: number;
   nim: string;
   jadwal_id: number;
-  status: "Hadir" | "Izin" | "Sakit" | "Alpha";
+  status: "Hadir";
   waktu_presensi?: string | null;
   token_qr: string;
   latitude?: number | null;
@@ -41,8 +41,8 @@ export async function createPresensi(data: Presensi): Promise<void> {
       data.nim,
       data.jadwal_id,
       data.status,
-      data.waktu_presensi ?? null,
-      data.token_qr,
+      data.waktu_presensi ?? new Date().toISOString(),
+      data.token_qr || null,
       data.latitude ?? null,
       data.longitude ?? null,
     ]
@@ -102,7 +102,7 @@ export async function deletePresensi(id: number): Promise<void> {
 export async function getPresensiWithDetails(): Promise<PresensiDetail[]> {
   const [rows] = await db.query(`
     SELECT 
-      p.id, p.nim, m.nama AS nama_mahasiswa, 
+      p.id, p.nim, m.namam AS nama_mahasiswa, 
       p.jadwal_id, p.status, p.waktu_presensi,
       p.token_qr, p.latitude, p.longitude,
       mk.nama_mk, d.nama_dosen,
@@ -122,8 +122,8 @@ export async function getRekapByMahasiswa(nim: string) {
   const [rows] = await db.query(
     `
     SELECT 
-      p.id, p.status, p.waktu_presensi,
-      m.nama AS mahasiswa_nama,
+      p.id, p.jadwal_id, p.status, p.waktu_presensi,
+      m.namam AS mahasiswa_nama,
       mk.nama_mk, mk.sks,
       d.nama_dosen,
       j.jam_mulai, j.jam_selesai, j.sub_capaian
@@ -146,7 +146,7 @@ export async function getRekapByMataKuliah(kode_mk: string) {
     `
     SELECT 
       p.id, p.status, p.waktu_presensi,
-      m.nim, m.nama AS mahasiswa_nama,
+      m.nim, m.namam AS mahasiswa_nama,
       mk.nama_mk, mk.sks,
       d.nama_dosen,
       j.jam_mulai, j.jam_selesai, j.sub_capaian
@@ -161,4 +161,18 @@ export async function getRekapByMataKuliah(kode_mk: string) {
     [kode_mk]
   );
   return rows;
+}
+
+export async function getPresensiStatusForMahasiswa(
+  nim: string
+): Promise<{ jadwal_id: number }[]> {
+  const [rows] = await db.query(
+    `
+    SELECT jadwal_id
+    FROM presensi
+    WHERE nim = ?
+    `,
+    [nim]
+  );
+  return rows as { jadwal_id: number }[];
 }

@@ -2,7 +2,7 @@ import { db } from "../database";
 
 export interface Mahasiswa {
   nim: string;
-  nama: string;
+  namam: string;
   jurusan: string;
 }
 
@@ -24,8 +24,8 @@ export async function getMahasiswaByNIM(
 // Tambah mahasiswa baru
 export async function createMahasiswa(data: Mahasiswa): Promise<void> {
   await db.query(
-    "INSERT INTO mahasiswa (nim, nama, jurusan) VALUES (?, ?, ?)",
-    [data.nim, data.nama, data.jurusan]
+    "INSERT INTO mahasiswa (nim, namam, jurusan) VALUES (?, ?, ?)",
+    [data.nim, data.namam, data.jurusan]
   );
 }
 
@@ -34,8 +34,8 @@ export async function updateMahasiswa(
   nim: string,
   data: Partial<Mahasiswa>
 ): Promise<void> {
-  await db.query("UPDATE mahasiswa SET nama = ?, jurusan = ? WHERE nim = ?", [
-    data.nama,
+  await db.query("UPDATE mahasiswa SET namam = ?, jurusan = ? WHERE nim = ?", [
+    data.namam,
     data.jurusan,
     nim,
   ]);
