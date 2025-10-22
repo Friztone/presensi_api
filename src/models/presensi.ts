@@ -17,7 +17,7 @@ export interface PresensiDetail extends Presensi {
   nama_dosen?: string | null;
   jam_mulai?: string | null;
   jam_selesai?: string | null;
-  sub_capaian?: string | null;
+  deskripsi?: string | null;
 }
 
 export async function getAllPresensi(): Promise<Presensi[]> {
@@ -106,7 +106,7 @@ export async function getPresensiWithDetails(): Promise<PresensiDetail[]> {
       p.jadwal_id, p.status, p.waktu_presensi,
       p.token_qr, p.latitude, p.longitude,
       mk.nama_mk, d.nama_dosen,
-      j.jam_mulai, j.jam_selesai, j.sub_capaian
+      j.jam_mulai, j.jam_selesai, j.deskripsi
     FROM presensi p
     LEFT JOIN mahasiswa   m  ON p.nim       = m.nim
     LEFT JOIN jadwal      j  ON p.jadwal_id = j.id
@@ -124,9 +124,9 @@ export async function getRekapByMahasiswa(nim: string) {
     SELECT 
       p.id, p.jadwal_id, p.status, p.waktu_presensi,
       m.namam AS mahasiswa_nama,
-      mk.nama_mk, mk.sks,
+      mk.nama_mk,
       d.nama_dosen,
-      j.jam_mulai, j.jam_selesai, j.sub_capaian
+      j.jam_mulai, j.jam_selesai, j.deskripsi
     FROM presensi p
     LEFT JOIN mahasiswa   m  ON p.nim       = m.nim
     LEFT JOIN jadwal      j  ON p.jadwal_id = j.id
@@ -147,9 +147,9 @@ export async function getRekapByMataKuliah(kode_mk: string) {
     SELECT 
       p.id, p.status, p.waktu_presensi,
       m.nim, m.namam AS mahasiswa_nama,
-      mk.nama_mk, mk.sks,
+      mk.nama_mk,
       d.nama_dosen,
-      j.jam_mulai, j.jam_selesai, j.sub_capaian
+      j.jam_mulai, j.jam_selesai, j.deskripsi
     FROM presensi p
     LEFT JOIN mahasiswa   m  ON p.nim       = m.nim
     LEFT JOIN jadwal      j  ON p.jadwal_id = j.id
@@ -159,6 +159,27 @@ export async function getRekapByMataKuliah(kode_mk: string) {
     ORDER BY j.jam_mulai DESC
     `,
     [kode_mk]
+  );
+  return rows;
+}
+
+export async function getRekapByJadwalId(jadwalId: number) {
+  const [rows] = await db.query(
+    `
+    SELECT 
+      p.id AS presensi_id,
+      m.nim,
+      m.namam AS nama_mahasiswa,
+      p.status,
+      p.waktu_presensi AS waktu,
+      p.latitude AS lat,
+      p.longitude AS lng
+    FROM presensi p
+    JOIN mahasiswa m ON p.nim = m.nim
+    WHERE p.jadwal_id = ?
+    ORDER BY p.waktu_presensi DESC
+    `,
+    [jadwalId]
   );
   return rows;
 }

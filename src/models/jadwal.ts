@@ -9,7 +9,8 @@ export interface Jadwal {
   jam_mulai: string;
   jam_selesai: string;
   token_qr: string;
-  sub_capaian: string;
+  deskripsi: string;
+  jumlah?: number;
 }
 
 // Ambil semua jadwal
@@ -19,7 +20,8 @@ export async function getAllJadwal(): Promise<Jadwal[]> {
       j.id, j.kode_mk, mk.nama_mk,
       j.nidn, d.nama_dosen,
       j.jam_mulai, j.jam_selesai,
-      j.token_qr, j.sub_capaian
+      j.token_qr, j.deskripsi,
+      j.jumlah
     FROM jadwal j
     LEFT JOIN mata_kuliah mk ON j.kode_mk = mk.kode_mk
     LEFT JOIN dosen d ON j.nidn = d.nidn
@@ -35,7 +37,8 @@ export async function getJadwalById(id: number): Promise<Jadwal | null> {
       j.id, j.kode_mk, mk.nama_mk,
       j.nidn, d.nama_dosen,
       j.jam_mulai, j.jam_selesai,
-      j.token_qr, j.sub_capaian
+      j.token_qr, j.deskripsi,
+      j.jumlah
     FROM jadwal j
     LEFT JOIN mata_kuliah mk ON j.kode_mk = mk.kode_mk
     LEFT JOIN dosen d ON j.nidn = d.nidn
@@ -50,8 +53,8 @@ export async function getJadwalById(id: number): Promise<Jadwal | null> {
 export async function createJadwal(data: Jadwal): Promise<void> {
   await db.query(
     `
-    INSERT INTO jadwal (kode_mk, nidn, jam_mulai, jam_selesai, token_qr, sub_capaian)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO jadwal (kode_mk, nidn, jam_mulai, jam_selesai, token_qr, deskripsi, jumlah)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `,
     [
       data.kode_mk,
@@ -59,7 +62,8 @@ export async function createJadwal(data: Jadwal): Promise<void> {
       data.jam_mulai,
       data.jam_selesai,
       data.token_qr,
-      data.sub_capaian,
+      data.deskripsi,
+      data.jumlah ?? 0,
     ]
   );
 }
@@ -72,7 +76,7 @@ export async function updateJadwal(
   await db.query(
     `
     UPDATE jadwal
-    SET kode_mk = ?, nidn = ?, jam_mulai = ?, jam_selesai = ?, token_qr = ?, sub_capaian = ?
+    SET kode_mk = ?, nidn = ?, jam_mulai = ?, jam_selesai = ?, token_qr = ?, deskripsi = ?, jumlah = ?
     WHERE id = ?
   `,
     [
@@ -81,7 +85,8 @@ export async function updateJadwal(
       data.jam_mulai,
       data.jam_selesai,
       data.token_qr,
-      data.sub_capaian,
+      data.deskripsi,
+      data.jumlah ?? 0,
       id,
     ]
   );

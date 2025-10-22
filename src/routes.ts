@@ -1,6 +1,5 @@
-import { IncomingMessage, ServerResponse } from "http";
-
-// Import model
+import { Router } from "express";
+import { comparePassword, generateToken, verifyToken } from "./models/auth";
 import {
   getAllMahasiswa,
   getMahasiswaByNIM,
@@ -8,7 +7,6 @@ import {
   updateMahasiswa,
   deleteMahasiswa,
 } from "./models/mahasiswa";
-
 import {
   getAllDosen,
   getDosenByNidn,
@@ -16,7 +14,6 @@ import {
   updateDosen,
   deleteDosen,
 } from "./models/dosen";
-
 import {
   getAllMataKuliah,
   getMataKuliahByKode,
@@ -24,7 +21,6 @@ import {
   updateMataKuliah,
   deleteMataKuliah,
 } from "./models/matakuliah";
-
 import {
   getAllJadwal,
   getJadwalById,
@@ -32,7 +28,6 @@ import {
   updateJadwal,
   deleteJadwal,
 } from "./models/jadwal";
-
 import {
   getAllPresensi,
   getPresensiById,
@@ -42,264 +37,241 @@ import {
   deletePresensi,
   getRekapByMahasiswa,
   getRekapByMataKuliah,
+  getRekapByJadwalId,
 } from "./models/presensi";
 
-async function parseBody(req: IncomingMessage): Promise<any> {
-  return new Promise((resolve, reject) => {
-    let body = "";
-    req.on("data", (chunk) => (body += chunk));
-    req.on("end", () => {
-      try {
-        resolve(JSON.parse(body || "{}"));
-      } catch (e) {
-        reject(e);
-      }
-    });
-  });
-}
+const router = Router();
 
-export async function router(req: IncomingMessage, res: ServerResponse) {
-  res.setHeader("Content-Type", "application/json");
+// ==================
+// VERIFY TOKEN
+// ==================
+router.get("/verify-token", (req, res) => {
+  const authHeader = req.headers.authorization;
 
-  try {
-    // === REKAP ===
-    if (req.method === "GET" && req.url?.startsWith("/rekap/mahasiswa/")) {
-      const nim = req.url.split("/")[3];
-      const data = await getRekapByMahasiswa(nim);
-      res.end(JSON.stringify(data));
-      return;
-    }
-
-    if (req.method === "GET" && req.url?.startsWith("/rekap/mata-kuliah/")) {
-      const kode = req.url.split("/")[3];
-      const data = await getRekapByMataKuliah(kode);
-      res.end(JSON.stringify(data));
-      return;
-    }
-
-    // === MAHASISWA ===
-    if (req.url?.startsWith("/mahasiswa")) {
-      if (req.method === "GET") {
-        if (req.url === "/mahasiswa") {
-          const data = await getAllMahasiswa();
-          res.end(JSON.stringify(data));
-          return;
-        }
-        const nim = req.url.split("/")[2];
-        if (nim) {
-          const mahasiswa = await getMahasiswaByNIM(nim);
-          res.end(JSON.stringify(mahasiswa || { message: "Not found" }));
-          return;
-        }
-      }
-
-      if (req.method === "POST") {
-        const body = await parseBody(req);
-        await createMahasiswa(body);
-        res.statusCode = 201;
-        res.end(JSON.stringify({ message: "Mahasiswa created" }));
-        return;
-      }
-
-      if (req.method === "PUT") {
-        const nim = req.url.split("/")[2];
-        const body = await parseBody(req);
-        await updateMahasiswa(nim, body);
-        res.end(JSON.stringify({ message: "Mahasiswa updated" }));
-        return;
-      }
-
-      if (req.method === "DELETE") {
-        const nim = req.url.split("/")[2];
-        await deleteMahasiswa(nim);
-        res.end(JSON.stringify({ message: "Mahasiswa deleted" }));
-        return;
-      }
-    }
-
-    // === DOSEN ===
-    if (req.url?.startsWith("/dosen")) {
-      if (req.method === "GET") {
-        if (req.url === "/dosen") {
-          const data = await getAllDosen();
-          res.end(JSON.stringify(data));
-          return;
-        }
-        const nidn = req.url.split("/")[2];
-        if (nidn) {
-          const dosen = await getDosenByNidn(nidn);
-          res.end(JSON.stringify(dosen || { message: "Not found" }));
-          return;
-        }
-      }
-
-      if (req.method === "POST") {
-        const body = await parseBody(req);
-        await createDosen(body);
-        res.statusCode = 201;
-        res.end(JSON.stringify({ message: "Dosen created" }));
-        return;
-      }
-
-      if (req.method === "PUT") {
-        const nidn = req.url.split("/")[2];
-        const body = await parseBody(req);
-        await updateDosen(nidn, body);
-        res.end(JSON.stringify({ message: "Dosen updated" }));
-        return;
-      }
-
-      if (req.method === "DELETE") {
-        const nidn = req.url.split("/")[2];
-        await deleteDosen(nidn);
-        res.end(JSON.stringify({ message: "Dosen deleted" }));
-        return;
-      }
-    }
-
-    // === MATA KULIAH ===
-    if (req.url?.startsWith("/mata-kuliah")) {
-      if (req.method === "GET") {
-        if (req.url === "/mata-kuliah") {
-          const data = await getAllMataKuliah();
-          res.end(JSON.stringify(data));
-          return;
-        }
-        const kode = req.url.split("/")[2];
-        if (kode) {
-          const mk = await getMataKuliahByKode(kode);
-          res.end(JSON.stringify(mk || { message: "Not found" }));
-          return;
-        }
-      }
-
-      if (req.method === "POST") {
-        const body = await parseBody(req);
-        await createMataKuliah(body);
-        res.statusCode = 201;
-        res.end(JSON.stringify({ message: "Mata Kuliah created" }));
-        return;
-      }
-
-      if (req.method === "PUT") {
-        const kode = req.url.split("/")[2];
-        const body = await parseBody(req);
-        await updateMataKuliah(kode, body);
-        res.end(JSON.stringify({ message: "Mata Kuliah updated" }));
-        return;
-      }
-
-      if (req.method === "DELETE") {
-        const kode = req.url.split("/")[2];
-        await deleteMataKuliah(kode);
-        res.end(JSON.stringify({ message: "Mata Kuliah deleted" }));
-        return;
-      }
-    }
-
-    // === JADWAL ===
-    if (req.url?.startsWith("/jadwal")) {
-      if (req.method === "GET") {
-        if (req.url === "/jadwal") {
-          const data = await getAllJadwal();
-          res.end(JSON.stringify(data));
-          return;
-        }
-        const id = parseInt(req.url.split("/")[2]);
-        if (!isNaN(id)) {
-          const jadwal = await getJadwalById(id);
-          res.end(JSON.stringify(jadwal || { message: "Not found" }));
-          return;
-        }
-      }
-
-      if (req.method === "POST") {
-        const body = await parseBody(req);
-        await createJadwal(body);
-        res.statusCode = 201;
-        res.end(JSON.stringify({ message: "Jadwal created" }));
-        return;
-      }
-
-      if (req.method === "PUT") {
-        const id = parseInt(req.url.split("/")[2]);
-        const body = await parseBody(req);
-        await updateJadwal(id, body);
-        res.end(JSON.stringify({ message: "Jadwal updated" }));
-        return;
-      }
-
-      if (req.method === "DELETE") {
-        const id = parseInt(req.url.split("/")[2]);
-        await deleteJadwal(id);
-        res.end(JSON.stringify({ message: "Jadwal deleted" }));
-        return;
-      }
-    }
-
-    // === PRESENSI ===
-    if (req.url?.startsWith("/presensi")) {
-      if (req.method === "GET") {
-        // Cek apakah ada query ?nim=
-        const urlObj = new URL(req.url, `http://${req.headers.host}`);
-        const nim = urlObj.searchParams.get("nim");
-
-        if (nim) {
-          const data = await getRekapByMahasiswa(nim);
-          res.end(JSON.stringify(data));
-          return;
-        }
-
-        if (urlObj.pathname === "/presensi") {
-          const data = await getPresensiWithDetails();
-          res.end(JSON.stringify(data));
-          return;
-        }
-
-        if (urlObj.pathname === "/presensi/raw") {
-          const data = await getAllPresensi();
-          res.end(JSON.stringify(data));
-          return;
-        }
-
-        const id = parseInt(urlObj.pathname.split("/")[2]);
-        if (!isNaN(id)) {
-          const presensi = await getPresensiById(id);
-          res.end(JSON.stringify(presensi || { message: "Not found" }));
-          return;
-        }
-      }
-
-      if (req.method === "POST") {
-        const body = await parseBody(req);
-        await createPresensi(body);
-        res.statusCode = 201;
-        res.end(JSON.stringify({ message: "Presensi created" }));
-        return;
-      }
-
-      if (req.method === "PUT") {
-        const id = parseInt(req.url.split("/")[2]);
-        const body = await parseBody(req);
-        await updatePresensi(id, body);
-        res.end(JSON.stringify({ message: "Presensi updated" }));
-        return;
-      }
-
-      if (req.method === "DELETE") {
-        const id = parseInt(req.url.split("/")[2]);
-        await deletePresensi(id);
-        res.end(JSON.stringify({ message: "Presensi deleted" }));
-        return;
-      }
-    }
-
-    res.statusCode = 404;
-    res.end(JSON.stringify({ message: "Not Found" }));
-  } catch (err: any) {
-    res.statusCode = 500;
-    res.end(
-      JSON.stringify({ message: "Internal Server Error", error: err?.message })
-    );
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Token tidak ditemukan" });
   }
-}
+
+  const token = authHeader.split(" ")[1];
+  const payload = verifyToken(token);
+
+  if (!payload) {
+    return res.status(401).json({ message: "Token tidak valid" });
+  }
+
+  return res.status(200).json({ message: "Token valid", payload });
+});
+
+// ==================
+// MAHASISWA
+// ==================
+router.get("/mahasiswa", async (req, res) => {
+  const data = await getAllMahasiswa();
+  res.json(data);
+});
+
+router.get("/mahasiswa/:nim", async (req, res) => {
+  const mahasiswa = await getMahasiswaByNIM(req.params.nim);
+  if (!mahasiswa) return res.status(404).json({ message: "Not found" });
+  res.json(mahasiswa);
+});
+
+router.post("/mahasiswa", async (req, res) => {
+  await createMahasiswa(req.body);
+  res.status(201).json({ message: "Mahasiswa created" });
+});
+
+router.put("/mahasiswa/:nim", async (req, res) => {
+  await updateMahasiswa(req.params.nim, req.body);
+  res.json({ message: "Mahasiswa updated" });
+});
+
+router.delete("/mahasiswa/:nim", async (req, res) => {
+  await deleteMahasiswa(req.params.nim);
+  res.json({ message: "Mahasiswa deleted" });
+});
+
+// ==================
+// DOSEN
+// ==================
+router.get("/dosen", async (req, res) => {
+  const data = await getAllDosen();
+  res.json(data);
+});
+
+router.get("/dosen/:nidn", async (req, res) => {
+  const dosen = await getDosenByNidn(req.params.nidn);
+  if (!dosen) return res.status(404).json({ message: "Not found" });
+  res.json(dosen);
+});
+
+router.post("/dosen", async (req, res) => {
+  await createDosen(req.body);
+  res.status(201).json({ message: "Dosen created" });
+});
+
+router.put("/dosen/:nidn", async (req, res) => {
+  await updateDosen(req.params.nidn, req.body);
+  res.json({ message: "Dosen updated" });
+});
+
+router.delete("/dosen/:nidn", async (req, res) => {
+  await deleteDosen(req.params.nidn);
+  res.json({ message: "Dosen deleted" });
+});
+
+// ==================
+// MATA KULIAH
+// ==================
+router.get("/mata-kuliah", async (req, res) => {
+  const data = await getAllMataKuliah();
+  res.json(data);
+});
+
+router.get("/mata-kuliah/:kode", async (req, res) => {
+  const mk = await getMataKuliahByKode(req.params.kode);
+  if (!mk) return res.status(404).json({ message: "Not found" });
+  res.json(mk);
+});
+
+router.post("/mata-kuliah", async (req, res) => {
+  await createMataKuliah(req.body);
+  res.status(201).json({ message: "Mata Kuliah created" });
+});
+
+router.put("/mata-kuliah/:kode", async (req, res) => {
+  await updateMataKuliah(req.params.kode, req.body);
+  res.json({ message: "Mata Kuliah updated" });
+});
+
+router.delete("/mata-kuliah/:kode", async (req, res) => {
+  await deleteMataKuliah(req.params.kode);
+  res.json({ message: "Mata Kuliah deleted" });
+});
+
+// ==================
+// JADWAL
+// ==================
+router.get("/jadwal", async (req, res) => {
+  const data = await getAllJadwal();
+  res.json(data);
+});
+
+router.get("/jadwal/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+  const jadwal = await getJadwalById(id);
+  if (!jadwal) return res.status(404).json({ message: "Not found" });
+  res.json(jadwal);
+});
+
+router.post("/jadwal", async (req, res) => {
+  await createJadwal(req.body);
+  res.status(201).json({ message: "Jadwal created" });
+});
+
+router.put("/jadwal/:id", async (req, res) => {
+  await updateJadwal(Number(req.params.id), req.body);
+  res.json({ message: "Jadwal updated" });
+});
+
+router.delete("/jadwal/:id", async (req, res) => {
+  await deleteJadwal(Number(req.params.id));
+  res.json({ message: "Jadwal deleted" });
+});
+
+// ==================
+// PRESENSI
+// ==================
+router.get("/presensi", async (req, res) => {
+  const { nim } = req.query;
+  if (nim) {
+    const data = await getRekapByMahasiswa(String(nim));
+    return res.json(data);
+  }
+  const data = await getPresensiWithDetails();
+  res.json(data);
+});
+
+router.get("/presensi/raw", async (req, res) => {
+  const data = await getAllPresensi();
+  res.json(data);
+});
+
+router.get("/presensi/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+  const presensi = await getPresensiById(id);
+  if (!presensi) return res.status(404).json({ message: "Not found" });
+  res.json(presensi);
+});
+
+router.post("/presensi", async (req, res) => {
+  await createPresensi(req.body);
+  res.status(201).json({ message: "Presensi created" });
+});
+
+router.put("/presensi/:id", async (req, res) => {
+  await updatePresensi(Number(req.params.id), req.body);
+  res.json({ message: "Presensi updated" });
+});
+
+router.delete("/presensi/:id", async (req, res) => {
+  await deletePresensi(Number(req.params.id));
+  res.json({ message: "Presensi deleted" });
+});
+
+// Dapatkan presensi berdasarkan jadwal_id
+router.get("/presensi/jadwal/:jadwalId", async (req, res) => {
+  const jadwalId = Number(req.params.jadwalId);
+  if (isNaN(jadwalId))
+    return res.status(400).json({ message: "Invalid jadwal ID" });
+
+  const data = await getRekapByJadwalId(jadwalId);
+  res.json(data);
+});
+
+// ==================
+// LOGIN DOSEN
+// ==================
+router.post("/login-dosen", async (req, res) => {
+  const { nidn, password } = req.body;
+  if (!nidn || !password)
+    return res.status(400).json({ message: "NIDN dan password wajib diisi" });
+
+  const dosen = await getDosenByNidn(nidn);
+  if (!dosen) return res.status(401).json({ message: "Dosen tidak ditemukan" });
+
+  const passwordValid =
+    dosen.password === password ||
+    (await comparePassword(password, dosen.password));
+
+  if (!passwordValid)
+    return res.status(401).json({ message: "Password salah" });
+
+  const token = generateToken({
+    nidn: dosen.nidn,
+    nama_dosen: dosen.nama_dosen,
+    role: "dosen",
+  });
+
+  res.json({
+    message: "Login berhasil",
+    token,
+    dosen: { nidn: dosen.nidn, nama_dosen: dosen.nama_dosen },
+  });
+});
+
+router.get("/verify-token", (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader)
+    return res.status(401).json({ message: "Token tidak ditemukan" });
+
+  const token = authHeader.split(" ")[1];
+  const payload = verifyToken(token);
+  if (!payload) return res.status(401).json({ message: "Token tidak valid" });
+
+  res.status(200).json({ message: "Token valid", user: payload });
+});
+
+export default router;

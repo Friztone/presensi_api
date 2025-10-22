@@ -1,9 +1,10 @@
+//matakuliah.ts
+
 import { db } from "../database";
 
 export interface MataKuliah {
   kode_mk: string;
   nama_mk: string;
-  sks: number;
 }
 
 // Ambil semua mata kuliah
@@ -25,10 +26,10 @@ export async function getMataKuliahByKode(
 
 // Tambah mata kuliah baru
 export async function createMataKuliah(data: MataKuliah): Promise<void> {
-  await db.query(
-    "INSERT INTO mata_kuliah (kode_mk, nama_mk, sks) VALUES (?, ?, ?)",
-    [data.kode_mk, data.nama_mk, data.sks]
-  );
+  await db.query("INSERT INTO mata_kuliah (kode_mk, nama_mk) VALUES (?, ?)", [
+    data.kode_mk,
+    data.nama_mk,
+  ]);
 }
 
 // Update mata kuliah berdasarkan kode_mk
@@ -36,10 +37,10 @@ export async function updateMataKuliah(
   kode_mk: string,
   data: Partial<MataKuliah>
 ): Promise<void> {
-  await db.query(
-    "UPDATE mata_kuliah SET nama_mk = ?, sks = ? WHERE kode_mk = ?",
-    [data.nama_mk, data.sks, kode_mk]
-  );
+  await db.query("UPDATE mata_kuliah SET nama_mk = ?, WHERE kode_mk = ?", [
+    data.nama_mk,
+    kode_mk,
+  ]);
 }
 
 // Hapus mata kuliah berdasarkan kode_mk
